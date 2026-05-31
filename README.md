@@ -15,9 +15,9 @@ the car currently is*.
 - `fuel_finder.search_price` service with response data (cheapest first)
 - Search by `latitude`+`longitude` **or** by UK `postcode` (geocoded via the
   free [postcodes.io](https://postcodes.io) API — no key)
-- Filter by `fuel_type` (`E5`, `E10`, `B7`, `SDV`), `radius` (km) and `limit`
+- Filter by `fuel_type` (`E5`, `E10`, `B7`, `SDV`), `radius_km` and `limit`
 - Results include brand, address, postcode, distance, price and coordinates
-- Dataset cached in memory (15 min) to respect the API rate limit
+- Dataset cached in memory (1 hour) to respect the API rate limit
 
 ## Prerequisites — API credentials
 
@@ -45,7 +45,7 @@ action: fuel_finder.search_price
 data:
   latitude: 53.2769
   longitude: -0.6608
-  radius: 8
+  radius_km: 8
   fuel_type: E5
   limit: 5
 response_variable: fuel
@@ -129,8 +129,9 @@ actions:
       custom_components.fuel_finder: debug
   ```
 
-  and adjust the field helpers in `api.py` (`_station_id`, `_coords`,
-  `_extract_price`) to match the live response.
+  and adjust the field helpers in `api.py` (`_extract_station_identifier`,
+  `_extract_fuel_entries_from_row` / `_extract_source_fuel_type`, and
+  `coerce_price`) to match the live response.
 - Data © Crown copyright, provided under the Open Government Licence v3.0.
 
 ## Disclaimer
