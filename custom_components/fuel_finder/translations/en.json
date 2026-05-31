@@ -1,0 +1,54 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fuel Finder API credentials",
+        "description": "Enter the client ID and secret for an Information Recipient application registered at developer.fuel-finder.service.gov.uk.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client secret"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Authentication failed - check the client ID and secret.",
+      "cannot_connect": "Could not reach the Fuel Finder API.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "These credentials are already configured."
+    }
+  },
+  "services": {
+    "search_price": {
+      "name": "Search fuel prices",
+      "description": "Return the cheapest nearby fuel stations for a location and fuel grade.",
+      "fields": {
+        "latitude": {
+          "name": "Latitude",
+          "description": "Centre latitude of the search (omit if using postcode)."
+        },
+        "longitude": {
+          "name": "Longitude",
+          "description": "Centre longitude of the search (omit if using postcode)."
+        },
+        "postcode": {
+          "name": "Postcode",
+          "description": "UK postcode to search around (used if lat/long not given)."
+        },
+        "radius": {
+          "name": "Radius (km)",
+          "description": "Search radius in kilometres."
+        },
+        "fuel_type": {
+          "name": "Fuel type",
+          "description": "Fuel grade to compare."
+        },
+        "limit": {
+          "name": "Max results",
+          "description": "Maximum number of stations to return."
+        }
+      }
+    }
+  }
+}

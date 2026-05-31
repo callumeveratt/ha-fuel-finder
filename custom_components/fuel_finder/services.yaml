@@ -1,0 +1,73 @@
+search_price:
+  name: Search fuel prices
+  description: >-
+    Return the cheapest nearby fuel stations for a location and fuel grade,
+    using the UK Fuel Finder open-data scheme. Provide either latitude+longitude
+    or a postcode. Returns response data (use response_variable).
+  fields:
+    latitude:
+      name: Latitude
+      description: Centre latitude of the search (omit if using postcode).
+      required: false
+      example: 53.2769
+      selector:
+        number:
+          min: -90
+          max: 90
+          step: 0.000001
+          mode: box
+    longitude:
+      name: Longitude
+      description: Centre longitude of the search (omit if using postcode).
+      required: false
+      example: -0.6608
+      selector:
+        number:
+          min: -180
+          max: 180
+          step: 0.000001
+          mode: box
+    postcode:
+      name: Postcode
+      description: UK postcode to search around (used if lat/long not given).
+      required: false
+      example: "LN1 1XX"
+      selector:
+        text:
+    radius:
+      name: Radius (km)
+      description: Search radius in kilometres.
+      required: false
+      default: 8
+      example: 8
+      selector:
+        number:
+          min: 0.1
+          max: 50
+          step: 0.1
+          unit_of_measurement: km
+          mode: slider
+    fuel_type:
+      name: Fuel type
+      description: Fuel grade to compare.
+      required: false
+      default: E5
+      selector:
+        select:
+          options:
+            - "E5"
+            - "E10"
+            - "B7"
+            - "SDV"
+    limit:
+      name: Max results
+      description: Maximum number of stations to return.
+      required: false
+      default: 5
+      example: 5
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          mode: box

@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fuel Finder API credentials",
+        "description": "Enter the client ID and secret for an Information Recipient application registered at developer.fuel-finder.service.gov.uk.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client secret"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Authentication failed - check the client ID and secret.",
+      "cannot_connect": "Could not reach the Fuel Finder API.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "These credentials are already configured."
+    }
+  }
+}
