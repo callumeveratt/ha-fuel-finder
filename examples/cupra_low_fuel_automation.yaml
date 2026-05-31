@@ -21,7 +21,7 @@ actions:
       latitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'latitude') }}"
       longitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'longitude') }}"
       fuel_type: E5
-      radius: 10
+      radius: 15
       unit: miles
       limit: 3
     response_variable: fuel
@@ -42,12 +42,11 @@ actions:
                 actions:
                   - action: URI
                     title: Navigate
-                    uri: >-
-                      google.navigation:q={{ fuel.cheapest.latitude }},{{ fuel.cheapest.longitude }}
+                    uri: "https://www.google.com/maps/dir/?api=1&destination={{ fuel.cheapest.latitude }},{{ fuel.cheapest.longitude }}&travelmode=driving"
     default:
       - action: notify.mobile_app_cal_s_oneplus
         data:
           title: "⛽ Cupra low fuel ({{ states('sensor.cal_s_cupra_fuel_level') }}%)"
           message: >-
-            No E5 prices found within 10 miles of the car right now. Range left:
+            No E5 prices found within 15 miles of the car right now. Range left:
             {{ states('sensor.cal_s_cupra_combustion_range') }} km.

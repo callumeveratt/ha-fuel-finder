@@ -136,8 +136,7 @@ actions:
                 actions:
                   - action: URI
                     title: Navigate
-                    uri: >-
-                      google.navigation:q={{ fuel.cheapest.latitude }},{{ fuel.cheapest.longitude }}
+                    uri: "https://www.google.com/maps/dir/?api=1&destination={{ fuel.cheapest.latitude }},{{ fuel.cheapest.longitude }}&travelmode=driving"
     default:
       - action: notify.mobile_app_cal_s_oneplus
         data:
