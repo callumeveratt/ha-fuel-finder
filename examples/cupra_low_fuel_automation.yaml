@@ -22,7 +22,7 @@ actions:
       latitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'latitude') }}"
       longitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'longitude') }}"
       fuel_type: E5
-      radius: 10
+      radius_km: 10
       limit: 3
     response_variable: fuel
   - choose:

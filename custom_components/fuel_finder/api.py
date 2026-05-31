@@ -124,6 +124,13 @@ def _safe_float(value: Any) -> float | None:
         return None
 
 
+def _clean_text(value: Any) -> str | None:
+    """Trim surrounding whitespace from a feed string; None if empty."""
+    if not isinstance(value, str):
+        return value if value is None else str(value).strip() or None
+    return value.strip() or None
+
+
 def _first_present(record: dict[str, Any], *keys: str) -> Any:
     """Return the first present, non-None value among the given keys."""
     for key in keys:
@@ -595,10 +602,12 @@ class FuelFinderClient:
             location = location if isinstance(location, dict) else {}
             existing = index.setdefault(node_id, {"site_id": node_id, "prices": {}})
             existing["site_id"] = node_id
-            existing["name"] = row.get("trading_name") or existing.get("name")
+            existing["name"] = _clean_text(row.get("trading_name")) or existing.get(
+                "name"
+            )
             existing["brand"] = (
-                row.get("brand_name")
-                or row.get("trading_name")
+                _clean_text(row.get("brand_name"))
+                or _clean_text(row.get("trading_name"))
                 or existing.get("brand")
             )
             existing["address"] = _format_address(location) or existing.get("address")

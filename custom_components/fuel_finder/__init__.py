@@ -30,6 +30,7 @@ from .const import (
     ATTR_LONGITUDE,
     ATTR_POSTCODE,
     ATTR_RADIUS,
+    ATTR_RADIUS_ALIAS,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     DEFAULT_FUEL_TYPE,
@@ -47,7 +48,10 @@ SEARCH_PRICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_LATITUDE): vol.Coerce(float),
         vol.Optional(ATTR_LONGITUDE): vol.Coerce(float),
         vol.Optional(ATTR_POSTCODE): cv.string,
-        vol.Optional(ATTR_RADIUS, default=DEFAULT_RADIUS_KM): vol.All(
+        vol.Optional(ATTR_RADIUS): vol.All(
+            vol.Coerce(float), vol.Range(min=0.1, max=50)
+        ),
+        vol.Optional(ATTR_RADIUS_ALIAS): vol.All(
             vol.Coerce(float), vol.Range(min=0.1, max=50)
         ),
         vol.Optional(ATTR_FUEL_TYPE, default=DEFAULT_FUEL_TYPE): vol.In(FUEL_TYPES),
@@ -101,10 +105,15 @@ def _register_search_service(hass: HomeAssistant) -> None:
                     )
                 lat, lon = await client.async_geocode_postcode(postcode)
 
+            radius_km = (
+                call.data.get(ATTR_RADIUS)
+                or call.data.get(ATTR_RADIUS_ALIAS)
+                or DEFAULT_RADIUS_KM
+            )
             stations = await client.async_search(
                 latitude=lat,
                 longitude=lon,
-                radius_km=call.data[ATTR_RADIUS],
+                radius_km=radius_km,
                 fuel_type=call.data[ATTR_FUEL_TYPE],
                 limit=call.data[ATTR_LIMIT],
             )
@@ -115,7 +124,7 @@ def _register_search_service(hass: HomeAssistant) -> None:
             "search": {
                 "latitude": lat,
                 "longitude": lon,
-                "radius_km": call.data[ATTR_RADIUS],
+                "radius_km": radius_km,
                 "fuel_type": call.data[ATTR_FUEL_TYPE],
                 "count": len(stations),
             },
