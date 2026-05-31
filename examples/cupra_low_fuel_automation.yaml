@@ -1,0 +1,52 @@
+# Cupra Ateca low-fuel -> cheapest nearby E5, with navigate action.
+# Deploy after the fuel_finder integration is installed (HACS) and configured.
+# Trigger: fuel level below 15% (guarded against unavailable/unknown).
+alias: Cupra low fuel - nearby E5
+description: >-
+  When the Cupra's fuel drops below 15%, look up the cheapest E5 stations near
+  the car's current location and send Cal an actionable notification.
+mode: single
+triggers:
+  - trigger: numeric_state
+    entity_id: sensor.cal_s_cupra_fuel_level
+    below: 15
+conditions:
+  # numeric_state already ignores unavailable/unknown, but guard the GPS too.
+  - condition: template
+    value_template: >-
+      {{ state_attr('device_tracker.cal_s_cupra_position', 'latitude') is not none
+         and state_attr('device_tracker.cal_s_cupra_position', 'longitude') is not none }}
+actions:
+  - action: fuel_finder.search_price
+    data:
+      latitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'latitude') }}"
+      longitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'longitude') }}"
+      fuel_type: E5
+      radius: 10
+      limit: 3
+    response_variable: fuel
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ fuel.cheapest is not none }}"
+        sequence:
+          - action: notify.mobile_app_cal_s_oneplus
+            data:
+              title: "⛽ Cupra low fuel ({{ states('sensor.cal_s_cupra_fuel_level') }}%)"
+              message: >-
+                Cheapest E5: {{ fuel.cheapest.brand or fuel.cheapest.name }} at
+                {{ fuel.cheapest.price_pence }}p/L, {{ fuel.cheapest.distance_km }} km away
+                ({{ fuel.cheapest.postcode }}).
+              data:
+                actions:
+                  - action: URI
+                    title: Navigate
+                    uri: >-
+                      google.navigation:q={{ fuel.cheapest.latitude }},{{ fuel.cheapest.longitude }}
+    default:
+      - action: notify.mobile_app_cal_s_oneplus
+        data:
+          title: "⛽ Cupra low fuel ({{ states('sensor.cal_s_cupra_fuel_level') }}%)"
+          message: >-
+            No E5 prices found within 10 km of the car right now. Range left:
+            {{ states('sensor.cal_s_cupra_combustion_range') }} km.
