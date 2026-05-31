@@ -36,7 +36,7 @@
           "name": "Postcode",
           "description": "UK postcode to search around (used if lat/long not given)."
         },
-        "radius_km": {
+        "radius": {
           "name": "Radius",
           "description": "Search radius in the chosen unit."
         },

@@ -1,6 +1,6 @@
 # Cupra Ateca low-fuel -> cheapest nearby E5, with navigate action.
 # Deploy after the fuel_finder integration is installed (HACS) and configured.
-# Trigger: fuel level below 15% (guarded against unavailable/unknown).
+# Trigger: fuel level below 15% (guarded against unavailable GPS).
 alias: Cupra low fuel - nearby E5
 description: >-
   When the Cupra's fuel drops below 15%, look up the cheapest E5 stations near
@@ -11,7 +11,6 @@ triggers:
     entity_id: sensor.cal_s_cupra_fuel_level
     below: 15
 conditions:
-  # numeric_state already ignores unavailable/unknown, but guard the GPS too.
   - condition: template
     value_template: >-
       {{ state_attr('device_tracker.cal_s_cupra_position', 'latitude') is not none
@@ -22,7 +21,8 @@ actions:
       latitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'latitude') }}"
       longitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'longitude') }}"
       fuel_type: E5
-      radius_km: 10
+      radius: 10
+      unit: miles
       limit: 3
     response_variable: fuel
   - choose:
@@ -35,7 +35,8 @@ actions:
               title: "⛽ Cupra low fuel ({{ states('sensor.cal_s_cupra_fuel_level') }}%)"
               message: >-
                 Cheapest E5: {{ fuel.cheapest.brand or fuel.cheapest.name }} at
-                {{ fuel.cheapest.price_pence }}p/L, {{ fuel.cheapest.distance_km }} km away
+                {{ fuel.cheapest.price_pence }}p/L,
+                {{ fuel.cheapest.distance_miles }} miles away
                 ({{ fuel.cheapest.postcode }}).
               data:
                 actions:
@@ -48,5 +49,5 @@ actions:
         data:
           title: "⛽ Cupra low fuel ({{ states('sensor.cal_s_cupra_fuel_level') }}%)"
           message: >-
-            No E5 prices found within 10 km of the car right now. Range left:
+            No E5 prices found within 10 miles of the car right now. Range left:
             {{ states('sensor.cal_s_cupra_combustion_range') }} km.

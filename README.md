@@ -15,8 +15,11 @@ the car currently is*.
 - `fuel_finder.search_price` service with response data (cheapest first)
 - Search by `latitude`+`longitude` **or** by UK `postcode` (geocoded via the
   free [postcodes.io](https://postcodes.io) API — no key)
-- Filter by `fuel_type` (`E5`, `E10`, `B7`, `SDV`), `radius_km` and `limit`
-- Results include brand, address, postcode, distance, price and coordinates
+- Choose `unit`: `km` (default) or `miles` — affects both the `radius` input
+  and the distance output
+- Filter by `fuel_type` (`E5`, `E10`, `B7`, `SDV`), `radius` and `limit`
+- Results include brand, address, postcode, `distance_km`, `distance_miles`,
+  price (£) and price_pence
 - Dataset cached in memory (1 hour) to respect the API rate limit
 
 ## Prerequisites — API credentials
@@ -40,46 +43,58 @@ free, as an **Information Recipient** application:
 
 ## Using the service
 
+### By latitude/longitude (km)
+
 ```yaml
 action: fuel_finder.search_price
 data:
   latitude: 53.2769
   longitude: -0.6608
-  radius_km: 8
+  radius: 8
+  unit: km
   fuel_type: E5
   limit: 5
 response_variable: fuel
 ```
 
-Or by postcode:
+### By postcode (miles)
 
 ```yaml
 action: fuel_finder.search_price
 data:
   postcode: "LN1 1XX"
+  radius: 5
+  unit: miles
   fuel_type: E5
 response_variable: fuel
 ```
 
-The response looks like:
+### Response shape
 
 ```yaml
 search:
   latitude: 53.2769
   longitude: -0.6608
-  radius_km: 8
+  radius: 8          # in the requested unit
+  radius_km: 8.0     # always in km (internal)
+  unit: km
   fuel_type: E5
-  count: 12
+  count: 5
 cheapest:
   brand: Tesco
-  address: ...
-  postcode: LN6 ...
-  distance_km: 1.8
-  price: 145.9
-  price_pence: 145.9
-  latitude: 53.2...
-  longitude: -0.6...
-stations: [ ... ]
+  name: Tesco Superstore
+  address: Linwood Rd, Market Rasen, LN8 3AW
+  postcode: LN8 3AW
+  latitude: 53.38367
+  longitude: -0.33618
+  distance_km: 24.61
+  distance_miles: 15.29
+  fuel_type: E5
+  price: 1.599        # pounds
+  price_pence: 159.9
+  last_updated: "2026-05-18T14:19:15+00:00"
+stations:
+  - ...               # same shape, all stations within radius, cheapest first
 ```
 
 ## Example: low-fuel alert for a car
@@ -93,46 +108,60 @@ triggers:
 conditions:
   - condition: template
     value_template: >-
-      {{ states('sensor.cal_s_cupra_fuel_level') not in ['unknown','unavailable'] }}
+      {{ state_attr('device_tracker.cal_s_cupra_position', 'latitude') is not none }}
 actions:
   - action: fuel_finder.search_price
     data:
-      latitude: "{{ state_attr('device_tracker.cal_s_cupra_position','latitude') }}"
-      longitude: "{{ state_attr('device_tracker.cal_s_cupra_position','longitude') }}"
+      latitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'latitude') }}"
+      longitude: "{{ state_attr('device_tracker.cal_s_cupra_position', 'longitude') }}"
       fuel_type: E5
-      radius_km: 10
+      radius: 10
+      unit: miles
       limit: 3
     response_variable: fuel
-  - action: notify.mobile_app_cal_s_oneplus
-    data:
-      title: "⛽ Low fuel ({{ states('sensor.cal_s_cupra_fuel_level') }}%)"
-      message: >-
-        Cheapest E5 nearby: {{ fuel.cheapest.brand }} —
-        {{ fuel.cheapest.price_pence }}p ({{ fuel.cheapest.distance_km }} km).
-      data:
-        actions:
-          - action: URI
-            title: Navigate
-            uri: >-
-              google.navigation:q={{ fuel.cheapest.latitude }},{{ fuel.cheapest.longitude }}
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ fuel.cheapest is not none }}"
+        sequence:
+          - action: notify.mobile_app_cal_s_oneplus
+            data:
+              title: "⛽ Low fuel ({{ states('sensor.cal_s_cupra_fuel_level') }}%)"
+              message: >-
+                Cheapest E5: {{ fuel.cheapest.brand }} —
+                {{ fuel.cheapest.price_pence }}p/L,
+                {{ fuel.cheapest.distance_miles }} miles away
+                ({{ fuel.cheapest.postcode }}).
+              data:
+                actions:
+                  - action: URI
+                    title: Navigate
+                    uri: >-
+                      google.navigation:q={{ fuel.cheapest.latitude }},{{ fuel.cheapest.longitude }}
+    default:
+      - action: notify.mobile_app_cal_s_oneplus
+        data:
+          title: "⛽ Low fuel ({{ states('sensor.cal_s_cupra_fuel_level') }}%)"
+          message: >-
+            No E5 found within 10 miles. Range left:
+            {{ states('sensor.cal_s_cupra_combustion_range') }} km.
 ```
 
-## Notes / status
+## Troubleshooting
 
-- The public schema for the Fuel Finder API response is not fully documented.
-  The client reads station/price fields defensively across common shapes; if
-  results come back empty, enable debug logging to inspect the raw records:
+If results come back empty, enable debug logging to inspect the raw API records:
 
-  ```yaml
-  logger:
-    logs:
-      custom_components.fuel_finder: debug
-  ```
+```yaml
+logger:
+  logs:
+    custom_components.fuel_finder: debug
+```
 
-  and adjust the field helpers in `api.py` (`_extract_station_identifier`,
-  `_extract_fuel_entries_from_row` / `_extract_source_fuel_type`, and
-  `coerce_price`) to match the live response.
-- Data © Crown copyright, provided under the Open Government Licence v3.0.
+The field helpers most likely to need adjusting if live data differs:
+`_extract_station_identifier`, `_extract_fuel_entries_from_row` /
+`_extract_source_fuel_type`, and `coerce_price` in `api.py`.
+
+Data © Crown copyright, provided under the Open Government Licence v3.0.
 
 ## Disclaimer
 

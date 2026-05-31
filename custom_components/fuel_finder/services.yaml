@@ -34,7 +34,7 @@ search_price:
       example: "LN1 1XX"
       selector:
         text:
-    radius_km:
+    radius:
       name: Radius
       description: >-
         Search radius in the chosen unit (km by default, miles if unit is set
