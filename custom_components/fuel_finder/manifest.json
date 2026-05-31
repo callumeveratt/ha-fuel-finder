@@ -3,7 +3,7 @@
   "name": "Fuel Finder Search (UK)",
   "codeowners": ["@callumeveratt"],
   "config_flow": true,
-  "documentation": "https://github.com/callumeveratt/ha-fuel-finder",
+  "documentation": "https://github.com/callumeveratt/ha-fuel-finder/README.md",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/callumeveratt/ha-fuel-finder/issues",
