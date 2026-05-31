@@ -74,3 +74,11 @@ ATTR_RADIUS = "radius_km"
 ATTR_RADIUS_ALIAS = "radius"  # accepted for backward compatibility
 ATTR_FUEL_TYPE = "fuel_type"
 ATTR_LIMIT = "limit"
+ATTR_UNIT = "unit"
+
+# Unit options
+UNIT_KM = "km"
+UNIT_MILES = "miles"
+DEFAULT_UNIT = UNIT_KM
+MILES_TO_KM = 1.60934
+KM_TO_MILES = 0.621371

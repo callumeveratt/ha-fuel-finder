@@ -11,7 +11,7 @@
       }
     },
     "error": {
-      "invalid_auth": "Authentication failed - check the client ID and secret.",
+      "invalid_auth": "Authentication failed — check the client ID and secret.",
       "cannot_connect": "Could not reach the Fuel Finder API.",
       "unknown": "Unexpected error."
     },

@@ -31,14 +31,20 @@ from .const import (
     ATTR_POSTCODE,
     ATTR_RADIUS,
     ATTR_RADIUS_ALIAS,
+    ATTR_UNIT,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     DEFAULT_FUEL_TYPE,
     DEFAULT_LIMIT,
     DEFAULT_RADIUS_KM,
+    DEFAULT_UNIT,
     DOMAIN,
     FUEL_TYPES,
+    KM_TO_MILES,
+    MILES_TO_KM,
     SERVICE_SEARCH_PRICE,
+    UNIT_KM,
+    UNIT_MILES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,15 +55,16 @@ SEARCH_PRICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_LONGITUDE): vol.Coerce(float),
         vol.Optional(ATTR_POSTCODE): cv.string,
         vol.Optional(ATTR_RADIUS): vol.All(
-            vol.Coerce(float), vol.Range(min=0.1, max=50)
+            vol.Coerce(float), vol.Range(min=0.1, max=100)
         ),
         vol.Optional(ATTR_RADIUS_ALIAS): vol.All(
-            vol.Coerce(float), vol.Range(min=0.1, max=50)
+            vol.Coerce(float), vol.Range(min=0.1, max=100)
         ),
         vol.Optional(ATTR_FUEL_TYPE, default=DEFAULT_FUEL_TYPE): vol.In(FUEL_TYPES),
         vol.Optional(ATTR_LIMIT, default=DEFAULT_LIMIT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=25)
         ),
+        vol.Optional(ATTR_UNIT, default=DEFAULT_UNIT): vol.In([UNIT_KM, UNIT_MILES]),
     }
 )
 
@@ -105,11 +112,14 @@ def _register_search_service(hass: HomeAssistant) -> None:
                     )
                 lat, lon = await client.async_geocode_postcode(postcode)
 
-            radius_km = (
+            unit = call.data[ATTR_UNIT]
+            radius_input = (
                 call.data.get(ATTR_RADIUS)
                 or call.data.get(ATTR_RADIUS_ALIAS)
-                or DEFAULT_RADIUS_KM
+                or (DEFAULT_RADIUS_KM if unit == UNIT_KM else round(DEFAULT_RADIUS_KM * KM_TO_MILES, 1))
             )
+            radius_km = radius_input * MILES_TO_KM if unit == UNIT_MILES else radius_input
+
             stations = await client.async_search(
                 latitude=lat,
                 longitude=lon,
@@ -120,11 +130,17 @@ def _register_search_service(hass: HomeAssistant) -> None:
         except FuelFinderApiError as err:
             raise HomeAssistantError(str(err)) from err
 
+        # Always expose both distance_km and distance_miles for convenience.
+        for station in stations:
+            station["distance_miles"] = round(station["distance_km"] * KM_TO_MILES, 2)
+
         return {
             "search": {
                 "latitude": lat,
                 "longitude": lon,
                 "radius_km": radius_km,
+                "radius": radius_input,
+                "unit": unit,
                 "fuel_type": call.data[ATTR_FUEL_TYPE],
                 "count": len(stations),
             },

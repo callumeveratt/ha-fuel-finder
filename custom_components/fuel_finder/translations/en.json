@@ -36,9 +36,13 @@
           "name": "Postcode",
           "description": "UK postcode to search around (used if lat/long not given)."
         },
-        "radius": {
-          "name": "Radius (km)",
-          "description": "Search radius in kilometres."
+        "radius_km": {
+          "name": "Radius",
+          "description": "Search radius in the chosen unit."
+        },
+        "unit": {
+          "name": "Unit",
+          "description": "Distance unit for the radius input and distance output."
         },
         "fuel_type": {
           "name": "Fuel type",
