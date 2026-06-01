@@ -727,7 +727,7 @@ class FuelFinderClient:
                     or station.get("last_updated"),
                 }
             )
-        found.sort(key=lambda s: s["price"])
+        found.sort(key=lambda s: (s["price"], s["distance_km"]))
         return found[:limit]
 
 
